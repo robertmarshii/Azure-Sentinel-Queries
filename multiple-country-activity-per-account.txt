@@ -1,0 +1,12 @@
+let start=datetime("2019-03-31T20:43:44.047Z");
+let end=datetime("2019-04-01T20:43:44.047Z");
+let timeRange=ago(1d);
+let azureSignIns =  SigninLogs
+|where TimeGenerated > start and TimeGenerated < end
+| where TimeGenerated >= timeRange
+| project Location , Identity;
+azureSignIns
+| summarize AggregatedValue = makeset(Location) by Identity
+| where arraylength(AggregatedValue) > 1
+| order by arraylength(AggregatedValue)
+| extend AccountCustomEntity = Identity

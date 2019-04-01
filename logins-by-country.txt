@@ -1,0 +1,18 @@
+let start=datetime("2019-03-31T20:39:39.849Z");
+let end=datetime("2019-04-01T20:39:39.849Z");
+let timeRange=ago(14d);
+let country = "SY";
+//SET 2 CHAR COUNTRY CODE HERE
+let azureSignIns =  SigninLogs
+|where TimeGenerated > start and TimeGenerated < end
+| where TimeGenerated >= timeRange
+| where SourceSystem == "Azure AD"
+| where LocationDetails["countryOrRegion"] == country
+| project TimeGenerated, OperationName, IPAddress, AppDisplayName , Identity, UserId, UserPrincipalName, Location, LocationDetails , ClientAppUsed , DeviceDetail, ConditionalAccessPolicies;
+azureSignIns
+| extend locationString= strcat(tostring(LocationDetails["countryOrRegion"]), "/", tostring(LocationDetails["state"]), "/", tostring(LocationDetails["city"]), ";" , tostring(LocationDetails["geoCoordinates"]))
+| order by AppDisplayName, TimeGenerated desc
+| extend IPCustomEntity = IPAddress
+| extend Timestamp = TimeGenerated
+| extend HostCustomEntity = locationString
+| extend AccountCustomEntity = UserPrincipalName
