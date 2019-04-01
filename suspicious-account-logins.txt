@@ -1,0 +1,19 @@
+SigninLogs 
+| where TimeGenerated >= ago(30d)
+| where ResultType == "50057" 
+| where ClientAppUsed contains "oth" 
+| where ResultDescription == "User account is disabled. The account has been disabled by an administrator." 
+| summarize disabledAccountLoginAttempts=count(), disabledAccountsTargeted=dcount(UserPrincipalName),applicationsTargeted=dcount(AppDisplayName), disabledAccountSet=makeset(UserPrincipalName), applicationSet=makeset(AppDisplayName)  by IPAddress//, timeslice=bin(TimeGenerated, 1d)
+| order by disabledAccountLoginAttempts desc 
+| join kind= leftouter (
+    // Consider these IPs suspicious - and alert any related  successful sign-ins
+    SigninLogs
+    | where ResultType == 0
+    | summarize successfulAccountSigninCount=dcount(UserPrincipalName), successfulAccountSigninSet=makeset(UserPrincipalName, 15) by IPAddress
+    // Assume IPs associated with sign-ins from 100+ distinct user accounts are safe
+    | where successfulAccountSigninCount <100
+) on IPAddress  
+// IPs from which attempts to authenticate as disabled user accounts originated, and had a non-zero success rate for some other account
+| where successfulAccountSigninCount > 1
+| where disabledAccountsTargeted > 1
+| project successfulAccountSigninSet 

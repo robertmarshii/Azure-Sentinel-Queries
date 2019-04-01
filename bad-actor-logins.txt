@@ -1,0 +1,21 @@
+let timeRange=ago(14d);
+let azureSignIns =  SigninLogs
+| where TimeGenerated >= timeRange
+| where SourceSystem == "Azure AD"
+| where ResultType != 50126
+| where ResultType != 50055
+| where ResultType != 50053
+| where IPAddress == "202.62.126.226"
+or IPAddress  == "185.245.87.178"
+or IPAddress  == "160.119.208.254"
+or IPAddress  == "217.165.112.64"
+or IPAddress  == "185.112.188.65"
+or IPAddress  == "172.83.40.103"
+or IPAddress  == "59.61.220.245"  or IPAddress  == "115.216.58.200"  or IPAddress  == "113.128.128.174" or IPAddress  == "36.56.150.180" or IPAddress  == "180.121.131.136" or IPAddress  == "121.226.101.125" or IPAddress  == "60.169.94.191" or IPAddress  == "180.114.151.80" or IPAddress  == "222.191.179.225" or IPAddress  == "221.227.106.176" or IPAddress  == "222.191.178.193" or IPAddress  == "183.143.48.235" or IPAddress  == "180.113.60.252" or IPAddress  == "180.113.140.245" or IPAddress  == "180.113.143.230" or IPAddress  == "180.114.229.24" or IPAddress  == "114.225.55.36" or IPAddress  == "221.227.110.248" or IPAddress  == "180.114.229.163" or IPAddress  == "221.227.111.109" or IPAddress  == "115.208.78.155" or IPAddress  == "117.84.210.171" or IPAddress  == "222.191.177.67" or IPAddress  == "180.113.123.242" or IPAddress  == "183.143.45.206" or IPAddress  == "221.227.111.168" or IPAddress  == "122.230.147.90" or IPAddress  == "221.227.105.207" or IPAddress  == "180.114.170.145" or IPAddress  == "122.230.150.235" or IPAddress  == "180.113.65.176" or IPAddress  == "122.230.145.138" or IPAddress  == "117.85.181.111"
+| project TimeGenerated, OperationName, IPAddress, AppDisplayName, ResultType, Identity, UserId, UserPrincipalName, Location, LocationDetails , ClientAppUsed , DeviceDetail, ConditionalAccessPolicies;
+azureSignIns
+| extend locationString= strcat(tostring(LocationDetails["countryOrRegion"]), "/", tostring(LocationDetails["state"]), "/", tostring(LocationDetails["city"]), ";" , tostring(LocationDetails["geoCoordinates"]))
+| order by AppDisplayName, TimeGenerated desc
+| extend AccountCustomEntity = UserPrincipalName
+| extend HostCustomEntity = Identity
+| extend IPCustomEntity = IPAddress
